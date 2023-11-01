@@ -49,7 +49,20 @@ Run cmake
 cmake .
 ```
 
+
+# To install json-c for caliberation data
+git clone https://github.com/Microsoft/vcpkg.git
+cd .\vcpkg\
+.\bootstrap-vcpkg.sh
+.\vcpkg.exe integrate install
+vcpkg install json-c
+.\vcpkg.exe install json-c
+
+
 Open the Project.sln and build the project <br>
 You should have a "deps/Fusion/Fusion/Release/Fusion.lib" file.
 ### Build AirAPI_Windows DLL 
 Open AirAPI_Windows.sln and make sure "Release" and "x64" are set and build.
+
+Some of the code was taken from [Linux driver implementation](https://gitlab.com/TheJackiMonster/nrealAirLinuxDriver/-/tree/main?ref_type=heads).
+Thanks so much, as this solves most of the issues with current implementation.

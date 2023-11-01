@@ -24,6 +24,18 @@
     <ClInclude Include="AirAPI_Windows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="crc32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="device3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="device4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NewAirApi_Windows.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -33,6 +45,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AirAPI_Windows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="crc32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="device3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="device4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NewAirApi_Windows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
