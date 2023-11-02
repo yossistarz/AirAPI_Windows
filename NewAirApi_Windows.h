@@ -20,6 +20,11 @@ extern "C" AIR_API float* GetEuler_New();
 
 extern "C" AIR_API void DeviceRead_New();
 
+extern "C" AIR_API float* GetGyroOffset_New();
+
+extern "C" AIR_API int LoadGyroOffset_New(const char* path);
+
+extern "C" AIR_API int SaveGyroOffset_New(const char* path);
 //extern "C" AIR_API bool SwitchToSBS_New();
 //
 //extern "C" AIR_API int GetDispMode_New();

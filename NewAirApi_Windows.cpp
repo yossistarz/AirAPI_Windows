@@ -3,6 +3,7 @@
 #include <mutex>
 #include <iostream>
 #include "device4.h"
+#include "deps/Fusion/Fusion/FusionOffset.h"
 using namespace std;
 
 device3_quat_type orientation;
@@ -64,7 +65,7 @@ int StartConnection_New()
 	auto device3res = device3_open(&dev3, track);
 
 	if (DEVICE3_ERROR_NO_ERROR != device3res) {
-		cout << "Error device3: "<< device3res << "\r\n";
+		cout << "Error device3: " << device3res << "\r\n";
 		return 0;
 	}
 	device3_clear(&dev3);
@@ -156,4 +157,72 @@ float* GetEuler_New()
 	//e[2] = euler.angle.yaw;
 	//mtx.unlock();
 	//return e;
+}
+
+float* gyroVector = new float[3];
+float* GetGyroOffset_New() {
+	if (dev3.offset) {
+		gyroVector = ((FusionOffset*)dev3.offset)->gyroscopeOffset.array;
+		return gyroVector;
+	}
+
+	return NULL;
+}
+
+int SaveGyroOffset_New(const char* path) {
+	
+	if (!dev3.offset) {
+		return DEVICE3_ERROR_NO_ALLOCATION;
+	}
+
+#pragma warning(suppress : 4996)
+	FILE* file = fopen(path, "wb");
+	if (!file) {
+
+		return DEVICE3_ERROR_FILE_NOT_OPEN;
+	}
+
+	device3_error_type result = DEVICE3_ERROR_NO_ERROR;
+
+	size_t count;
+	count = fwrite(dev3.offset, 1, sizeof(FusionOffset), file);
+
+	if (sizeof(FusionOffset) != count) {
+		result = DEVICE3_ERROR_SAVING_FAILED;
+	}
+
+	if (0 != fclose(file)) {
+		return DEVICE3_ERROR_FILE_NOT_CLOSED;
+	}
+
+	return result;
+}
+
+int LoadGyroOffset_New(const char* path) {
+
+	if (!dev3.offset) {
+		return DEVICE3_ERROR_NO_ALLOCATION;
+	}
+
+#pragma warning(suppress : 4996)
+	FILE* file = fopen(path, "rb");
+	if (!file) {
+
+		return DEVICE3_ERROR_FILE_NOT_OPEN;
+	}
+
+	device3_error_type result = DEVICE3_ERROR_NO_ERROR;
+
+	size_t count;
+	count = fread(dev3.offset, 1, sizeof(FusionOffset), file);
+
+	if (sizeof(FusionOffset) != count) {
+		result = DEVICE3_ERROR_LOADING_FAILED;
+	}
+
+	if (0 != fclose(file)) {
+		return DEVICE3_ERROR_FILE_NOT_CLOSED;
+	}
+
+	return result;
 }
