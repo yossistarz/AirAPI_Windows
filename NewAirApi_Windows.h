@@ -18,7 +18,7 @@ extern "C" AIR_API float* GetQuaternion_New();
 //Function to get euler
 extern "C" AIR_API float* GetEuler_New();
 
-extern "C" AIR_API void DeviceRead_New();
+extern "C" AIR_API int DeviceRead_New();
 
 extern "C" AIR_API float* GetGyroOffset_New();
 

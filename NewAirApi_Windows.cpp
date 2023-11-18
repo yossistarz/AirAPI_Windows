@@ -80,19 +80,20 @@ int StartConnection_New()
 	return 1;
 }
 
-void DeviceRead_New()
+int DeviceRead_New()
 {
-	while (true) {
-		if (DEVICE3_ERROR_NO_ERROR != device3_read(&dev3, -1))
-		{
-			break;
-		}
+	return device3_read(&dev3, -1);
+	//while (true) {
+	//	if (DEVICE3_ERROR_NO_ERROR != )
+	//	{
+	//		break;
+	//	}
 
-		//if (DEVICE4_ERROR_NO_ERROR == device4_read(&dev4, -1))
-		//{
-		//	break;
-		//}
-	}
+	//	//if (DEVICE4_ERROR_NO_ERROR == device4_read(&dev4, -1))
+	//	//{
+	//	//	break;
+	//	//}
+	//}
 }
 //
 //bool SwitchToSBS_New() {
