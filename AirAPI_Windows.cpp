@@ -10,6 +10,8 @@
 //Air USB VID and PID
 #define AIR_VID 0x3318
 #define AIR_PID 0x0424
+#define AIR_2_PID 0x0428
+#define AIR_2_PRO_PID 0x0432
 
 //Is Tracking
 bool g_isTracking = false;
@@ -211,39 +213,34 @@ process_accel(const int32_t in_accel[3], float out_vec[])
 
 }
 
-
-static hid_device*
-open_device()
+static hid_device* open_device_by_interface(int interface_number)
 {
-	struct hid_device_info* devs = hid_enumerate(AIR_VID, AIR_PID);
-	struct hid_device_info* cur_dev = devs;
-	hid_device* device = NULL;
+	struct hid_device_info* devs = NULL;
+	struct hid_device_info* devs_1 = hid_enumerate(AIR_VID, AIR_PID);
+	struct hid_device_info* devs_2 = hid_enumerate(AIR_VID, AIR_2_PID);
+	struct hid_device_info* devs_2_pro = hid_enumerate(AIR_VID, AIR_2_PRO_PID);
 
-	while (devs) {
-		if (cur_dev->interface_number == 3) {
-			device = hid_open_path(cur_dev->path);
-			std::cout << "Interface 3 bound" << std::endl;
-			break;
-		}
+	struct hid_device_info* cur_dev = NULL;
 
-		cur_dev = cur_dev->next;
+	if (devs_1 != NULL) {
+		cur_dev = devs_1;
+		devs = devs_1;
+	}
+	else if (devs_2 != NULL) {
+		cur_dev = devs_2;
+		devs = devs_2;
+	}
+	else if (devs_2_pro != NULL) {
+		cur_dev = devs_2_pro;
+		devs = devs_2_pro;
 	}
 
-	hid_free_enumeration(devs);
-	return device;
-}
-
-static hid_device*
-open_device4()
-{
-	struct hid_device_info* devs = hid_enumerate(AIR_VID, AIR_PID);
-	struct hid_device_info* cur_dev = devs;
 	hid_device* device = NULL;
 
 	while (devs) {
-		if (cur_dev->interface_number == 4) {
+		if (cur_dev->interface_number == interface_number) {
 			device = hid_open_path(cur_dev->path);
-			std::cout << "Interface 4 bound" << std::endl;
+			std::cout << "Interface " << interface_number << " bound" << std::endl;
 			break;
 		}
 
@@ -359,7 +356,7 @@ DWORD WINAPI interface4Handler(LPVOID lpParam) {
 	std::array<uint8_t, 17> initBrightness = { 0x00, 0xfd, 0x1e, 0xb9, 0xf0, 0x68, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03 };
 	hid_write(device4, initBrightness.data(), initBrightness.size());
 	
-
+	
 	while (g_isListening) {
 		std::array<uint8_t, 65> recv = {};
 		int res = hid_read(device4, recv.data(), recv.size());
@@ -396,6 +393,7 @@ DWORD WINAPI interface4Handler(LPVOID lpParam) {
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -409,9 +407,9 @@ int StartConnection()
 	}
 	else {
 		std::cout << "Opening Device" << std::endl;
-		// open device
-		device = open_device();
-		device4 = open_device4();
+		// open devices
+		device = open_device_by_interface(3); // for interface 3
+		device4 = open_device_by_interface(4); // for interface 4
 		if (!device || !device4) {
 			std::cout << "Unable to open device" << std::endl;
 			return 1;
