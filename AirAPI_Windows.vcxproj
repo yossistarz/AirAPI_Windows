@@ -157,6 +157,7 @@
     <ClInclude Include="device4.h" />
     <ClInclude Include="NewAirApi_Windows.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AirAPI_Windows.cpp" />
@@ -171,6 +172,7 @@
     <ClCompile Include="crc32.cpp" />
     <ClCompile Include="device3.cpp" />
     <ClCompile Include="device4.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -36,6 +36,7 @@
 
 #include "crc32.h"
 #include <iostream>
+#include "utils.h"
 
 #ifndef NDEBUG
 #define device4_error(msg) std::cout << "ERROR: " << msg << std::endl;//fprintf(stderr, "ERROR: %s\n", msg)
@@ -177,8 +178,8 @@ device4_error_type device4_open(device4_type* device, device4_event_callback cal
 	}
 	
 	memset(device, 0, sizeof(device4_type));
-	device->vendor_id 	= 0x3318;
-	device->product_id 	= 0x0424;
+	device->vendor_id = AIR_VID;//0x3318;
+	device->product_id = getConnectedProductId();//0x0424;
 	device->callback 	= callback;
 
 	if (0 != hid_init()) {
