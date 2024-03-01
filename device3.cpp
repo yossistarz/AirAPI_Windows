@@ -48,6 +48,8 @@ using namespace std;
 #define device3_error(msg) (0)
 #endif
 
+#define GRAVITY_G (9.806f)
+
 struct device3_calibration_t {
 	FusionMatrix gyroscopeMisalignment;
 	FusionVector gyroscopeSensitivity;
@@ -612,6 +614,15 @@ static void readIMU_from_packet(const device3_packet_type* packet,
 #define min(x, y) ((x) < (y)? (x) : (y))
 #define max(x, y) ((x) > (y)? (x) : (y))
 
+static void pre_biased_coordinate_system(FusionVector* v) {
+	*v = FusionAxesSwap(*v, FusionAxesAlignmentNXNZNY);
+}
+
+static void post_biased_coordinate_system(const FusionVector* v, FusionVector* res) {
+	*res = FusionAxesSwap(*v, FusionAxesAlignmentPXNYNZ);
+}
+
+
 static void apply_calibration(const device3_type* device,
 							  FusionVector* gyroscope,
 							  FusionVector* accelerometer,
@@ -663,28 +674,48 @@ static void apply_calibration(const device3_type* device,
 		hardIronOffset = FUSION_VECTOR_ZERO;
 	}
 	
-	*gyroscope = FusionCalibrationInertial(
-			*gyroscope,
+	gyroscopeOffset = FusionVectorMultiplyScalar(
+		gyroscopeOffset,
+		FusionRadiansToDegrees(1.0f)
+	);
+
+	accelerometerOffset = FusionVectorMultiplyScalar(
+		accelerometerOffset,
+		1.0f / GRAVITY_G
+	);
+
+	FusionVector g = *gyroscope;
+	FusionVector a = *accelerometer;
+	FusionVector m = *magnetometer;
+
+	pre_biased_coordinate_system(&g);
+	pre_biased_coordinate_system(&a);
+	pre_biased_coordinate_system(&m);
+
+
+	g = FusionCalibrationInertial(
+			g,
 			gyroscopeMisalignment,
 			gyroscopeSensitivity,
 			gyroscopeOffset
 	);
 	
-	*accelerometer = FusionCalibrationInertial(
-			*accelerometer,
+	a = FusionCalibrationInertial(
+			a,
 			accelerometerMisalignment,
 			accelerometerSensitivity,
 			accelerometerOffset
 	);
 	
-	*magnetometer = FusionCalibrationInertial(
-			*magnetometer,
+	m = FusionCalibrationInertial(
+			m,
 			magnetometerMisalignment,
 			magnetometerSensitivity,
 			magnetometerOffset
 	);
 	
-	static FusionVector max = { 0.077f, -0.129f, -0.446f }, min = { 0.603f, 0.447f, 0.085f };
+	//static FusionVector max = { 0.077f, -0.129f, -0.446f }, min = { 0.603f, 0.447f, 0.085f };
+	static FusionVector max = { FLT_MIN, FLT_MIN, FLT_MIN }, min = { FLT_MAX, FLT_MAX, FLT_MAX };
 	for (int i = 0; i < 3; i++) {
 		if (magnetometer->array[i] > max.array[i]) max.array[i] = magnetometer->array[i];
 		if (magnetometer->array[i] < min.array[i]) min.array[i] = magnetometer->array[i];
@@ -716,6 +747,10 @@ static void apply_calibration(const device3_type* device,
 			softIronMatrix,
 			hardIronOffset
 	);
+
+	post_biased_coordinate_system(&g, gyroscope);
+	post_biased_coordinate_system(&a, accelerometer);
+	post_biased_coordinate_system(&m, magnetometer);
 
 	const FusionAxesAlignment alignment = FusionAxesAlignmentNXNYPZ;
 	
@@ -755,6 +790,7 @@ device3_error_type device3_calibrate(device3_type* device, uint32_t iterations, 
 	
 	const float factor = iterations > 0? 1.0f / ((float) iterations) : 0.0f;
 	
+	FusionVector prev_accel;
 	while (iterations > 0) {
 		memset(&packet, 0, sizeof(device3_packet_type));
 		
@@ -790,10 +826,12 @@ device3_error_type device3_calibrate(device3_type* device, uint32_t iterations, 
 		
 		if (initialized) {
 			cal_gyroscope = FusionVectorAdd(cal_gyroscope, gyroscope);
-			cal_accelerometer = FusionVectorAdd(cal_accelerometer, accelerometer);
+			//cal_accelerometer = FusionVectorAdd(cal_accelerometer, accelerometer);
+			cal_accelerometer = FusionVectorAdd(cal_accelerometer, FusionVectorSubtract(accelerometer, prev_accel));
 		} else {
 			cal_gyroscope = gyroscope;
-			cal_accelerometer = accelerometer;
+			//cal_accelerometer = accelerometer;
+			cal_accelerometer = FUSION_VECTOR_ZERO;
 		}
 		
 		apply_calibration(device, &gyroscope, &accelerometer, &magnetometer);
@@ -820,7 +858,8 @@ device3_error_type device3_calibrate(device3_type* device, uint32_t iterations, 
 					device->calibration->gyroscopeOffset,
 					FusionVectorMultiplyScalar(
 							cal_gyroscope,
-							factor
+							FusionDegreesToRadians(factor)
+							//factor
 					)
 			);
 		}
@@ -830,7 +869,7 @@ device3_error_type device3_calibrate(device3_type* device, uint32_t iterations, 
 					device->calibration->accelerometerOffset,
 					FusionVectorMultiplyScalar(
 							cal_accelerometer,
-							factor
+							factor * GRAVITY_G
 					)
 			);
 		}
@@ -929,7 +968,16 @@ device3_error_type device3_read(device3_type* device, int timeout) {
 	if (device->ahrs) {
 		/* The magnetometer seems to make results of sensor fusion generally worse. So it is not used currently. */
 		//FusionAhrsUpdate((FusionAhrs*) device->ahrs, gyroscope, accelerometer, magnetometer, deltaTime);
-		FusionAhrsUpdateNoMagnetometer((FusionAhrs*) device->ahrs, gyroscope, accelerometer, deltaTime);
+		//FusionAhrsUpdateNoMagnetometer((FusionAhrs*) device->ahrs, gyroscope, accelerometer, deltaTime);
+		if (isnan(magnetometer.axis.x) || isnan(magnetometer.axis.x) || isnan(magnetometer.axis.x)) {
+			FusionAhrsUpdateNoMagnetometer((FusionAhrs*)device->ahrs, gyroscope, accelerometer, deltaTime);
+		}
+		else {
+			/* The magnetometer seems to make results of sensor fusion generally worse. So it is not used currently. */
+			// FusionAhrsUpdate((FusionAhrs*) device->ahrs, gyroscope, accelerometer, magnetometer, deltaTime);
+			FusionAhrsUpdateNoMagnetometer((FusionAhrs*)device->ahrs, gyroscope, accelerometer, deltaTime);
+		}
+
 
 		const device3_quat_type orientation = device3_get_orientation(device->ahrs);
 
