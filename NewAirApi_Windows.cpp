@@ -57,7 +57,7 @@ void device4Track(uint64_t timestamp,
 
 
 device3_type dev3;
-//device4_type dev4;
+device4_type dev4;
 
 int StartConnection_New()
 {
@@ -70,13 +70,18 @@ int StartConnection_New()
 	}
 	device3_clear(&dev3);
 
-	/*cout << "Init Device4" << endl;
+	return 1;
+}
+
+int StartConroller_New()
+{
+	cout << "Init Conroller" << endl;
 	auto device4res = device4_open(&dev4, device4Track);
 	if (DEVICE4_ERROR_NO_ERROR != device4res) {
 		cout << "Error device4: " << device4res << "\r\n";
 		return 0;
 	}
-	device4_clear(&dev4);*/
+	device4_clear(&dev4);
 	return 1;
 }
 
@@ -96,19 +101,19 @@ int DeviceRead_New()
 	//}
 }
 //
-//bool SwitchToSBS_New() {
-//	return device4_SwitchToSBS(&dev4);
-//	/*if (!send_payload_action(device, DEVICE4_MSG_R_DISP_MODE, 0, NULL)) {
-//		device4_error("Requesting display mode failed");
-//		return DEVICE4_ERROR_PAYLOAD_FAILED;
-//	}
-//
-//	if (!recv_payload_msg(device, DEVICE4_MSG_R_DISP_MODE, 1, &device->disp_mode)) {
-//		device4_error("Receiving display mode failed");
-//		return DEVICE4_ERROR_PAYLOAD_FAILED;
-//	}*/
-//}
-//
+bool SwitchToSBS_New() {
+	return device4_SwitchToSBS(&dev4);
+	/*if (!send_payload_action(device, DEVICE4_MSG_R_DISP_MODE, 0, NULL)) {
+		device4_error("Requesting display mode failed");
+		return DEVICE4_ERROR_PAYLOAD_FAILED;
+	}
+
+	if (!recv_payload_msg(device, DEVICE4_MSG_R_DISP_MODE, 1, &device->disp_mode)) {
+		device4_error("Receiving display mode failed");
+		return DEVICE4_ERROR_PAYLOAD_FAILED;
+	}*/
+}
+
 //int GetDispMode_New() {
 //	return dev4.disp_mode;
 //	/*if (!send_payload_action(device, DEVICE4_MSG_R_DISP_MODE, 0, NULL)) {
@@ -126,6 +131,13 @@ int DeviceRead_New()
 int StopConnection_New()
 {
 	device3_close(&dev3);
+
+	return 1;
+}
+
+int StopController_New()
+{
+	device4_close(&dev4);
 
 	return 1;
 }

@@ -9,8 +9,12 @@
 //Function to start connection to Air
 extern "C" AIR_API int StartConnection_New();
 
+extern "C" AIR_API int StartConroller_New();
+
 //Function to stop connection to Air
 extern "C" AIR_API int StopConnection_New();
+
+extern "C" AIR_API int StopController_New();
 
 //Function to get quaternion
 extern "C" AIR_API float* GetQuaternion_New();
@@ -25,7 +29,8 @@ extern "C" AIR_API float* GetGyroOffset_New();
 extern "C" AIR_API int LoadGyroOffset_New(const char* path);
 
 extern "C" AIR_API int SaveGyroOffset_New(const char* path);
-//extern "C" AIR_API bool SwitchToSBS_New();
+
+extern "C" AIR_API bool SwitchToSBS_New();
 //
 //extern "C" AIR_API int GetDispMode_New();
 
