@@ -30,7 +30,7 @@ extern "C" AIR_API int LoadGyroOffset_New(const char* path);
 
 extern "C" AIR_API int SaveGyroOffset_New(const char* path);
 
-extern "C" AIR_API bool SwitchToSBS_New();
+extern "C" AIR_API bool SwitchToSBS_New(short displayMode);
 //
 //extern "C" AIR_API int GetDispMode_New();
 

@@ -129,6 +129,23 @@ PACK(struct device4_packet_t {
 	};
 });
 
+
+PACK(struct device4_packet_t2 {
+	uint8_t empty;
+	uint8_t head;
+	uint32_t checksum;
+	uint16_t length;
+	uint32_t request_id;
+	uint32_t timestamp;
+	uint16_t msgid;
+	uint8_t reserved[5];
+	union {
+		char text[42];
+		uint8_t data[42];
+	};
+});
+
+
 enum device4_event_t {
 	DEVICE4_EVENT_UNKNOWN 			= 0,
 	DEVICE4_EVENT_SCREEN_ON 		= 1,
@@ -140,6 +157,7 @@ enum device4_event_t {
 
 typedef enum device4_error_t device4_error_type;
 typedef struct device4_packet_t device4_packet_type;
+typedef struct device4_packet_t2 device4_packet_type2;
 typedef enum device4_event_t device4_event_type;
 typedef void (*device4_event_callback)(
 		uint64_t timestamp,
@@ -178,7 +196,7 @@ device4_error_type device4_update_mcu_firmware(device4_type* device, const char*
 
 device4_error_type device4_close(device4_type* device);
 
-bool device4_SwitchToSBS(device4_type* device);
+bool device4_SwitchToSBS(device4_type* device, uint8_t displayMode);
 
 #ifdef __cplusplus
 } // extern "C"

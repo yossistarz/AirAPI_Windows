@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 //
 
+#define _CRT_SECURE_NO_DEPRECATE
 //#include "pch.h"
 #include "device4.h"
 
@@ -56,6 +57,13 @@ static bool send_payload(device4_type* device, uint8_t size, const uint8_t* payl
 	
 	int transferred = hid_write((hid_device*)device->handle, payload, payload_size);
 	
+	/*FILE* file = fopen("C:\\Users\\yosal.MIDDLEEAST\\Downloads\\ForDelete\\temp\\sent.txt", "wb");
+	size_t count;
+	count = fwrite(payload, 1, transferred, file);*/
+
+	/*if (0 != fclose(file)) {
+	}*/
+
 	//if (transferred != payload_size) {
 	if (transferred < 0){
 		device4_error("Sending payload failed");
@@ -73,6 +81,13 @@ static bool recv_payload(device4_type* device, uint8_t size, uint8_t* payload) {
 	
 	int transferred = hid_read((hid_device*)device->handle, payload, payload_size);
 	
+	/*FILE* file = fopen("C:\\Users\\yosal.MIDDLEEAST\\Downloads\\ForDelete\\temp\\rec.txt", "wb");
+	size_t count;
+	count = fwrite(payload, 1, transferred, file);*/
+
+	/*if (0 != fclose(file)) {
+	}*/
+
 	if (transferred >= payload_size) {
 		transferred = payload_size;
 	}
@@ -89,23 +104,28 @@ static bool recv_payload(device4_type* device, uint8_t size, uint8_t* payload) {
 	return (transferred == size);
 }
 
+
 static bool send_payload_action(device4_type* device, uint16_t msgid, uint8_t len, const uint8_t* data) {
-	static device4_packet_type packet;
+	static device4_packet_type2 packet;
 	
-	const uint16_t packet_len = 17 + len;
+	const uint16_t packet_len = 18 + len;
 	const uint16_t payload_len = 5 + packet_len;
 	
+	packet.empty = 0;
 	packet.head = PACKET_HEAD;
 	packet.length = packet_len;
 	packet.timestamp = 0;
 	packet.msgid = msgid;
+	packet.request_id = 0x1337;
 	memset(packet.reserved, 0, 5);
 	
 	memcpy(packet.data, data, len);
-	packet.checksum = crc32_checksum((const uint8_t*) (&packet.length), packet.length);
+	packet.checksum = crc32_checksum(&((const uint8_t*)(&packet))[6], packet.length);
+	//packet.checksum = crc32_checksum((const uint8_t*)(&packet.length), packet.length);
 
 	return send_payload(device, payload_len, (uint8_t*) (&packet));
 }
+
 
 static bool recv_payload_msg(device4_type* device, uint16_t msgid, uint8_t len, uint8_t* data) {
 	static device4_packet_type packet;
@@ -128,7 +148,8 @@ static bool recv_payload_msg(device4_type* device, uint16_t msgid, uint8_t len, 
 	
 	if (packet.msgid != msgid) {
 		device4_error("Unexpected payload received");
-		std::cout << "Expected: " << msgid << ", recived: " << packet.msgid << std::endl;
+		std::cout << "Expected: " << msgid << ", recived: " << packet.msgid << std::endl; //<< ", request id: " << packet.request_id << std::endl;
+
 		return false;
 	}
 
@@ -320,13 +341,13 @@ device4_error_type device4_read(device4_type* device, int timeout) {
 		return DEVICE4_ERROR_NO_HANDLE;
 	}
 	
-	if (MAX_PACKET_SIZE != sizeof(device4_packet_type)) {
+	/*if (MAX_PACKET_SIZE != sizeof(device4_packet_type)) {
 		device4_error("Not proper size");
 		return DEVICE4_ERROR_WRONG_SIZE;
-	}
+	}*/
 	
-	device4_packet_type packet;
-	memset(&packet, 0, sizeof(device4_packet_type));
+	device4_packet_type2 packet;
+	memset(&packet, 0, sizeof(device4_packet_type2));
 	
 	int transferred = hid_read_timeout(
 		(hid_device*)device->handle,
@@ -590,20 +611,28 @@ device4_error_type device4_close(device4_type* device) {
 }
 
 
-bool device4_SwitchToSBS(device4_type* device) {
-	uint8_t sbs = 0x03;
-	if (!send_payload_action(device, DEVICE4_MSG_W_DISP_MODE, 1, &sbs)) {
+bool device4_SwitchToSBS(device4_type* device, uint8_t displayMode) {
+	// 0x01 => 60Hz 1080p
+	// 0x03 => 60Hz SBS
+	// 0x04 => 72Hz SBS
+	// 0x09 => 90Hz SBS
+
+	if (!send_payload_action(device, DEVICE4_MSG_W_DISP_MODE, 1, &displayMode)) {
 		device4_error("Requesting display mode failed");
 		return DEVICE4_ERROR_PAYLOAD_FAILED;
 	}
 
-	if (!send_payload_action(device, DEVICE4_MSG_R_DISP_MODE, 0, NULL)) {
-		device4_error("Requesting display mode failed");
-		return DEVICE4_ERROR_PAYLOAD_FAILED;
-	}
+	//std::cout << "Got " << device->disp_mode << std::endl;
 
-	if (!recv_payload_msg(device, DEVICE4_MSG_R_DISP_MODE, 1, &device->disp_mode)) {
-		device4_error("Receiving display mode failed");
-		return DEVICE4_ERROR_PAYLOAD_FAILED;
-	}
+	//if (!send_payload_action(device, DEVICE4_MSG_R_DISP_MODE, 0, NULL)) {
+	//	device4_error("Requesting display mode failed");
+	//	return DEVICE4_ERROR_PAYLOAD_FAILED;
+	//}
+
+	//if (!recv_payload_msg(device, DEVICE4_MSG_R_DISP_MODE, 1, &device->disp_mode)) {
+	//	device4_error("Receiving display mode failed");
+	//	return DEVICE4_ERROR_PAYLOAD_FAILED;
+	//}
+
+	return true;
 }

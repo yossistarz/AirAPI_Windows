@@ -101,8 +101,8 @@ int DeviceRead_New()
 	//}
 }
 //
-bool SwitchToSBS_New() {
-	return device4_SwitchToSBS(&dev4);
+bool SwitchToSBS_New(short displayMode) {
+	return device4_SwitchToSBS(&dev4, displayMode);
 	/*if (!send_payload_action(device, DEVICE4_MSG_R_DISP_MODE, 0, NULL)) {
 		device4_error("Requesting display mode failed");
 		return DEVICE4_ERROR_PAYLOAD_FAILED;
