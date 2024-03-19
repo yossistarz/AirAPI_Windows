@@ -207,7 +207,7 @@ device4_error_type device4_open(device4_type* device, device4_event_callback cal
 		device4_error("Not initialized");
 		return DEVICE4_ERROR_NOT_INITIALIZED;
 	}
-
+	std::cout << "Found VID: " << device->vendor_id << " and PID: " << device->product_id << std::endl;
 	struct hid_device_info* info = hid_enumerate(
 		device->vendor_id, 
 		device->product_id
@@ -215,6 +215,8 @@ device4_error_type device4_open(device4_type* device, device4_event_callback cal
 
 	struct hid_device_info* it = info;
 	while (it) {
+		std::cout << "interfaces " << it->interface_number << " path: " << it->path << std::endl;
+
 		if (it->interface_number == 4) {
 			device->handle = hid_open_path(it->path);
 			break;
