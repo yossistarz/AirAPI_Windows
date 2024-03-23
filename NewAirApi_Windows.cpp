@@ -4,6 +4,7 @@
 #include <iostream>
 #include "device4.h"
 #include "deps/Fusion/Fusion/FusionOffset.h"
+#include "utils.h"
 using namespace std;
 
 device3_quat_type orientation;
@@ -71,6 +72,27 @@ int StartConnection_New()
 	device3_clear(&dev3);
 
 	return 1;
+}
+
+enum device3_GlassesType {
+	UNKNOWN = -1,
+	AIR = 0,
+	AIR_2 = 1,
+	AIR_2_PRO = 2
+};
+
+int GetGlassesType_New()
+{
+	switch (dev3.product_id) {
+		case AIR_PID:
+			return device3_GlassesType::AIR;
+		case AIR_2_PID:
+			return device3_GlassesType::AIR_2;
+		case AIR_2_PRO_PID:
+			return device3_GlassesType::AIR_2_PRO;
+	}
+
+	return device3_GlassesType::UNKNOWN;
 }
 
 int StartConroller_New()
