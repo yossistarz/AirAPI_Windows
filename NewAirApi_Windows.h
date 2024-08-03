@@ -26,6 +26,8 @@ extern "C" AIR_API int DeviceRead_New();
 
 extern "C" AIR_API float* GetGyroOffset_New();
 
+extern "C" AIR_API float* GetAngularVelocity_New();
+
 extern "C" AIR_API int LoadGyroOffset_New(const char* path);
 
 extern "C" AIR_API int SaveGyroOffset_New(const char* path);

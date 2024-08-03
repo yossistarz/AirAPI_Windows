@@ -9,6 +9,7 @@ using namespace std;
 
 device3_quat_type orientation;
 device3_vec3_type euler;
+device3_vec3_type angularVelocity;
 std::mutex mtx2;
 
 void track(uint64_t timestamp,
@@ -28,6 +29,7 @@ void track(uint64_t timestamp,
 		mtx2.lock();
 		orientation = device3_get_orientation(ahrs);
 		euler = device3_get_euler(orientation);
+		angularVelocity = device3_get_linear_acceleration(ahrs);
 		//cout << " euler: " << euler.x << "," << euler.y << "," << euler.z << "\r\n";
 		mtx2.unlock();
 		//printf("Pitch: %.2f; Roll: %.2f; Yaw: %.2f\n", euler.x, euler.y, euler.z);
@@ -202,6 +204,16 @@ float* GetGyroOffset_New() {
 	}
 
 	return NULL;
+}
+
+float* angularVelocityVector = new float[3];
+float* GetAngularVelocity_New() {
+	mtx2.lock();
+	angularVelocityVector[0] = angularVelocity.x;
+	angularVelocityVector[1] = angularVelocity.y;
+	angularVelocityVector[2] = angularVelocity.z;
+	mtx2.unlock();
+	return angularVelocityVector;
 }
 
 int SaveGyroOffset_New(const char* path) {
